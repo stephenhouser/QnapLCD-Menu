@@ -6,15 +6,26 @@ import qnaplcd
 import platform
 import subprocess
 import socket
+import threading
 
-# ip addresses
-# zfs pools
-# hdd temps
+DISPLAY_TIMEOUT = 30    # seconds
 
-PORT = '/dev/ttyS1'
+PORT = '/dev/ttyS1'     # same as default
 PORT_SPEED = 1200
 
 lcd = None
+
+lcd_timer = None
+def lcd_on():
+    global lcd_timer
+
+    lcd.backlight(True)
+
+    if lcd_timer:
+        lcd_timer.cancel()
+
+    lcd_timer = threading.Timer(DISPLAY_TIMEOUT, lambda: lcd.backlight(False))
+    lcd_timer.start()
 
 def shell(cmd):
     return subprocess.check_output(cmd, shell=True, universal_newlines=True).strip()
@@ -104,12 +115,14 @@ menu = [
 ]
 
 def response_handler(command, data):
-    global menu_item
+    global menu_item, lcd_timeout
     prev_menu = menu_item
 
     #print(f'RECV: {command} - {data:#04x}')
 
     if command == 'Switch_Status':
+        lcd_on()
+
         if data == 0x01: # up
             menu_item = (menu_item - 1) % len(menu)
 
@@ -120,15 +133,13 @@ def response_handler(command, data):
         #print(f'SHOW: {menu_item}')
         menu[menu_item]()
 
+
 def main():
     global lcd
     lcd = qnaplcd.QnapLCD(PORT, PORT_SPEED, response_handler)
-    lcd.backlight(True)
+    lcd_on()
     lcd.reset()
     lcd.clear()
-    lcd.get_board()
-    lcd.get_protocol()
-    lcd.get_buttons()
 
     quit = False
     while not quit:

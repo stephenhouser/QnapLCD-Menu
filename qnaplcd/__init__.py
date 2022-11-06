@@ -27,9 +27,10 @@ class QnapLCD:
             self.connection = None
             print('error', se)
 
-        self.handler = handler
-        self.reader = Thread(target=self.serial_reader)
-        self.reader.start()
+        if handler:
+            self.handler = handler
+            self.reader = Thread(target=self.serial_reader)
+            self.reader.start()
 
     def _read_bytes(self, bytes=1):
         if self.connection:
