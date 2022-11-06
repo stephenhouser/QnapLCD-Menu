@@ -12,6 +12,8 @@ but should work on other models that use the "A125" display with two buttons.
 
 # Installation
 
+To install, clone this repository onto your NAS somewhere that is accessible to the admin (root) user. It needs to be run *as root* to communicate with the display and the TrueNAS CLI.
+
 To communicate with the display, *pyserial* is required. If you are able to install it with `pip`, that's wonderful, do that!
 
 ```
