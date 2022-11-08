@@ -7,6 +7,7 @@ import platform
 import subprocess
 import socket
 import threading
+import json
 
 DISPLAY_TIMEOUT = 30    # seconds
 
@@ -52,15 +53,31 @@ def show_uptime():
 
 ip_addresses = []
 def add_ips_to_menu():
-    ip_a = shell('ip -4 -o a').split('\n')
+    def get_kind(iface):
+        if 'linkinfo' in iface:
+            if 'info_kind' in iface['linkinfo']:
+                return iface['linkinfo']['info_kind']
 
+        return ''
+
+    def get_ipv4(iface):
+        if 'addr_info' in iface:
+            for addr in iface['addr_info']:
+                if addr['family'] == 'inet':
+                    return addr['local']
+
+        return '0.0.0.0'
+
+    ip_json = json.loads(shell('ip -details -json address show'))
     ip_addresses.clear()
-    for ip in ip_a:
-        ip_atts = ip.split()
-        ip_dev = ip_atts[1]
-        ip_add = ip_atts[3].split('/')[0]
-        if ip_atts[3] != '127.0.0.1/8':
-            ip_addresses.append((ip_dev, ip_add))
+    for iface in ip_json:
+        if iface['link_type'] == 'loopback':
+            continue
+
+        if get_kind(iface) not in ['', 'tun']:
+                continue
+
+        ip_addresses.append(( iface['ifname'], get_ipv4(iface)))
 
     while show_ip in menu:
         menu.remove(show_ip)
