@@ -153,10 +153,13 @@ def response_handler(command, data):
 
 def main():
     global lcd
+
     lcd = qnaplcd.QnapLCD(PORT, PORT_SPEED, response_handler)
     lcd_on()
     lcd.reset()
     lcd.clear()
+
+    lcd.write(0, [platform.node(), 'System Ready...'])
 
     quit = False
     while not quit:
