@@ -57,14 +57,19 @@ def add_ips_to_menu():
         if 'linkinfo' in iface:
             if 'info_kind' in iface['linkinfo']:
                 return iface['linkinfo']['info_kind']
+            elif 'info_slave_kind' in iface['linkinfo']:
+                return 'slave'
 
         return ''
 
-    def get_ipv4(iface):
+    def get_details(iface, kind):
         if 'addr_info' in iface:
-            for addr in iface['addr_info']:
-                if addr['family'] == 'inet':
-                    return addr['local']
+            if kind == 'slave':
+                return iface['operstate']
+            else:
+                for addr in iface['addr_info']:
+                    if addr['family'] == 'inet':
+                        return addr['local']
 
         return '0.0.0.0'
 
@@ -74,10 +79,11 @@ def add_ips_to_menu():
         if iface['link_type'] == 'loopback':
             continue
 
-        if get_kind(iface) not in ['', 'tun']:
-                continue
+        kind = get_kind(iface)
+        if kind not in ['', 'tun', 'bond', 'slave']:
+            continue
 
-        ip_addresses.append(( iface['ifname'], get_ipv4(iface)))
+        ip_addresses.append(( iface['ifname'], get_details(iface, kind)))
 
     while show_ip in menu:
         menu.remove(show_ip)
@@ -120,7 +126,7 @@ def show_zpool():
 
     lcd.clear()
     lcd.write(0, [f'{pool[0]} ({pool[7]})', f'{pool[2]} of {pool[1]}'])
-    
+
 #
 # Menu
 #
